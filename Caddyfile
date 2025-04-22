@@ -1,0 +1,17 @@
+{
+    auto_https off
+}
+
+http://*:8080 {
+    root * /app
+    encode zstd gzip
+    file_server
+    header {
+        X-Content-Type-Options nosniff;
+        X-XSS-Protection "1; mode=block;"
+        X-Frame-Options "SAMEORIGIN"
+        -server
+        -X-Powered-By
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}

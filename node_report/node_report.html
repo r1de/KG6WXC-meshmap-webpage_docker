@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>MeshMap Node Report</title>
+	<script src="js/jquery-3.7.1.js"></script>
+	<link rel="stylesheet" href="css/datatables.css">
+	<link rel="stylesheet" href="css/buttons.dataTables.css">
+
+	<!-- these 2 are required for the CSV export ("buttons.html5.js") to work -->
+	<script src="js/jszip.js"></script>
+	<script src="js/pdfmake.js"></script>
+
+	<script src="js/datatables.min.js"></script>
+	<script src="js/dataTables.buttons.js"></script>
+	<script src="js/buttons.html5.js"></script>
+
+        <link rel="stylesheet" href="css/colReorder.dataTables.css">
+        <script src="js/dataTables.colReorder.js"></script>
+
+</head>
+<!-- <body class='wide comments meshdata'> -->
+<body>
+	<a name='top' id='top'></a>
+	<div id="test" style="display: inline; background: #999;"><a href="node_report.html"><h2 id="foundDevices" style="display: inline;">Nodes</h2></a></div> |
+	<div id="test2" style="display: inline; background: transparent;"><a href="error_report.html"><h2 id="errorDevices" style="display: inline;"> Errors</h2></a></div> |
+	<div id="test3" style="display: inline; background: transparent;"><a href="no_location.html"><h2 id="NoLocDevices" style="display: inline;"> No Location</h2></a></div>
+<!--	<h1 class='page_title' style='display: inline;'>MeshMap Nodes</h1> -->
+	<a href='../' style='float: right;'>Back to Map</a>
+	<table id="meshdata" class="display" cellspacing="0" width="100%">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Location</th>
+				<th>Grid</th>
+				<th>Uptime</th>
+				<th>Freq</th>
+<!--				<th>Lat</th> -->
+<!--				<th>Lon</th> -->
+				<th>SSID</th>
+				<th>Active Tunnels</th>
+				<th>Model</th>
+				<th>Hardware</th>
+				<th>Board ID</th>
+				<th>Version</th>
+				<th>Last Seen</th>
+			</tr>
+		</thead>
+
+		<tfoot>
+			<tr>
+				<th>Name</th>
+				<th>Location</th>
+				<th>Grid</th>
+				<th>Uptime</th>
+				<th>Freq</th>
+<!--				<th>Lat</th> -->
+<!--				<th>Lon</th> -->
+				<th>SSID</th>
+				<th>Active Tunnels</th>
+				<th>Model</th>
+				<th>Hardware</th>
+				<th>Board ID</th>
+				<th>Version</th>
+				<th>Last Seen</th>
+			</tr>
+		</tfoot>
+	</table>
+	<script>
+	new DataTable('#meshdata', {
+		ajax: '../data/node_report_data.json',
+		colReorder: true,
+		"scrollX": true,
+		"pageLength": 25,
+		"columnDefs": [{
+			"visible": true,
+			"targets": -1,
+		}],
+		"columns": [
+			{data: 'node'},
+			{data: 'location'},
+			{data: 'grid_square'},
+			{data: 'uptime'},
+			{data: 'freq'},
+//			{data: 'lat'},
+//			{data: 'lon'},
+			{data: 'ssid'},
+			{data: 'active_tunnel_count'},
+			{data: 'model'},
+			{data: 'hardware'},
+			{data: 'board_id'},
+			{data: 'firmware_version'},
+			{data: 'last_seen'}
+		],
+		processing: true,
+		serverside: true,
+		layout: {
+			topStart: {
+				buttons: [ 'excel' ]
+			}
+		}
+	});
+	</script>
+</html>

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en-US" data-theme="light">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="refresh" content="600">
+	
+	<title>MeshMap</title>
+	<!-- jQuery -->
+<!--	<script src="js/jquery-3.7.1.js"></script> -->
+
+	<!-- Leaflet -->
+	<script src="js/leaflet.js"></script>
+	<link rel="stylesheet" href="css/leaflet.css">
+	
+	<!-- Link line offset -->
+	<script src="js/leaflet.polylineoffset.js"></script>
+
+	<!-- Leaflet grouped layer control -->
+	<script src="js/leaflet.groupedlayercontrol.min.js"></script>
+	<link rel="stylesheet" href="css/leaflet.groupedlayercontrol.min.css">
+	
+	<!-- Leaflet "Slide Menu" -->
+	<script src="js/L.Control.SlideMenu.js"></script>
+	<link rel="stylesheet" href="css/L.Control.SlideMenu.css">
+
+	<!-- Spiderfy -->
+	<script src="js/spiderfy.js"></script>
+	
+	<!-- Search -->
+	<link rel="stylesheet" href="css/leaflet-search.min.css">
+	<script src="js/leaflet-search.min.js"></script>
+	
+	<!-- URL Hash -->
+	<script src="js/leaflet-hash.js"></script>
+
+	<!-- font awesome -->
+	<link rel="stylesheet" href="css/fontawesome-all.css">
+	
+	<!-- the ruler -->
+	<script src="js/leaflet-ruler.js"></script>
+	<link rel="stylesheet" href="css/leaflet-ruler.css">
+
+	<!- testing elevation stuff -->
+	<link rel="stylesheet" href="https://unpkg.com/@raruto/leaflet-elevation/dist/leaflet-elevation.css" />
+	<script src="https://unpkg.com/@raruto/leaflet-elevation/dist/leaflet-elevation.js"></script>
+	
+	<!-- local custom stuff. now with more java! -->
+	<script src = "data/map_data.js"></script>
+	<link rel="stylesheet" href="css/meshmap-default.css">
+	<script src="js/meshmap-legend.js"></script>
+	<link rel="stylesheet" href="css/map-legend-default.css">
+	<script src="js/meshmap-markerFunctions.js"></script>
+	<script src="js/meshmap-linkFunctions.js"></script>
+
+	<script src="js/meshmap-userLocation.js"></script>
+
+</head>
+<body>
+<div id="map"><div id='spiderfyActive'>SPIDERFY ACTIVE</div></div>
+<script>
+<!-- ELEVATION TEST -->
+var elevation_options = {
+
+    // Default chart colors: theme lime-theme, magenta-theme, ...
+    theme: "lightblue-theme",
+
+    // Chart container outside/inside map container
+    detached: true,
+
+    // if (detached), the elevation chart container
+    elevationDiv: "#elevation-div",
+
+    // if (!detached) autohide chart profile on chart mouseleave
+    autohide: false,
+
+    // if (!detached) initial state of chart profile control
+    collapsed: false,
+    
+    // if (!detached) control position on one of map corners
+    position: "topright",
+    
+    // Toggle close icon visibility
+    closeBtn: true,
+
+    // Autoupdate map center on chart mouseover.
+    followMarker: true,
+
+    // Autoupdate map bounds on chart update.
+    autofitBounds: true,
+
+    // Chart distance/elevation units.
+    imperial: false,
+
+    // [Lat, Long] vs [Long, Lat] points. (leaflet default: [Lat, Long])
+    reverseCoords: false,
+
+    // Acceleration chart profile: true || "summary" || "disabled" || false
+    acceleration: false,
+
+    // Slope chart profile: true || "summary" || "disabled" || false
+    slope: false,
+
+    // Speed chart profile: true || "summary" || "disabled" || false
+    speed: false,
+
+    // Altitude chart profile: true || "summary" || "disabled" || false
+    altitude: true,
+
+    // Display time info: true || "summary" || false
+    time: true,
+
+    // Display distance info: true || "summary" || false
+    distance: true,
+
+    // Summary track info style: "inline" || "multiline" || false
+    summary: 'multiline',
+
+    // Download link: "link" || false || "modal"
+    downloadLink: 'link',
+
+    // Toggle chart ruler filter
+    ruler: true,
+
+    // Toggle chart legend filter
+    legend: true,
+
+    // Toggle "leaflet-almostover" integration
+    almostOver: true,
+
+    // Toggle "leaflet-distance-markers" integration
+    distanceMarkers: false,
+
+    // Toggle "leaflet-edgescale" integration
+    edgeScale: false,
+    
+    // Toggle "leaflet-hotline" integration
+    hotline: true,
+
+    // Display track datetimes: true || false
+    timestamps: false,
+
+    // Display track waypoints: true || "markers" || "dots" || false
+    waypoints: true,
+
+    // Toggle custom waypoint icons: true || { associative array of <sym> tags } || false
+    wptIcons: {
+      '': L.divIcon({
+        className: 'elevation-waypoint-marker',
+        html: '<i class="elevation-waypoint-icon"></i>',
+        iconSize: [30, 30],
+        iconAnchor: [8, 30],
+      }),
+    },
+
+    // Toggle waypoint labels: true || "markers" || "dots" || false
+    wptLabels: true,
+
+    // Render chart profiles as Canvas or SVG Paths
+    preferCanvas: true,
+
+  };
+<!-- END ELEVATION TEST -->
+
+//Update page Title
+document.title = mapInfo.title;
+
+var darkModeText = "(prefers-color-scheme: dark)";
+var mapOriginMarker;
+
+getLocation();
+
+//Icons
+//900
+var nineRadioCircle = L.icon({
+	iconUrl: 'images/mapMarkers/magentaRadioCircle-icon.png',
+	iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]
+});
+var pulse9 = L.icon({
+	iconUrl: 'images/mapMarkers/magentaRadioCircle-icon.png',
+	iconSize: [24, 24], iconAnchor: [9, 9], popupAnchor: [0, -9],
+    shadowUrl: 'images/mapMarkers/pulse.svg',
+    shadowAnchor: [18,18]
+});
+//if(window.matchMedia(darkModeText).matches) {
+//	pulse9['options']['shadowUrl'] = 'images/mapMarkers/pulse-invert.svg';
+//}
+
+//2GHz
+var twoRadioCircle = L.icon({
+	iconUrl: 'images/mapMarkers/purpleRadioCircle-icon.png',
+	iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]
+});
+var pulse2 = L.icon({
+	iconUrl: 'images/mapMarkers/purpleRadioCircle-icon.png',
+	iconSize: [24, 24], iconAnchor: [9, 9], popupAnchor: [0, -9],
+    shadowUrl: 'images/mapMarkers/pulse.svg',
+    shadowAnchor: [18,18]
+});
+//if(window.matchMedia(darkModeText).matches) {
+//	pulse2['options']['shadowUrl'] = 'images/mapMarkers/pulse-invert.svg';
+//}
+
+//3GHz
+var threeRadioCircle = L.icon({
+    iconUrl: 'images/mapMarkers/blueRadioCircle-icon.png',
+    iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]
+});
+var pulse3 = L.icon({
+    iconUrl: 'images/mapMarkers/blueRadioCircle-icon.png',
+    iconSize: [24, 24], iconAnchor: [9, 9], popupAnchor: [0, -9],
+    shadowUrl: 'images/mapMarkers/pulse.svg',
+    shadowAnchor: [18,18]
+});
+//if(window.matchMedia(darkModeText).matches) {
+//	pulse3['options']['shadowUrl'] = 'images/mapMarkers/pulse-invert.svg';
+//}
+
+//5GHz
+var fiveRadioCircle = L.icon({
+    iconUrl: 'images/mapMarkers/goldRadioCircle-icon.png',
+    iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]
+});
+var pulse5 = L.icon({
+    iconUrl: 'images/mapMarkers/goldRadioCircle-icon.png',
+    iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9],
+    shadowUrl: 'images/mapMarkers/pulse.svg',
+    shadowAnchor: [18,18]
+});
+/*
+if(window.matchMedia(darkModeText).matches) {
+	pulse5['options']['shadowUrl'] = 'images/mapMarkers/pulse-invert.svg';
+}
+*/
+
+//mesh RF off
+var noRFCircle = L.icon({
+    iconUrl: 'images/mapMarkers/greyRadioCircle-icon.png',
+    iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]
+});
+var pulseNon = L.icon({
+    iconUrl: 'images/mapMarkers/greyRadioCircle-icon.png',
+    iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9],
+    shadowUrl: 'images/mapMarkers/pulse.svg',
+    shadowAnchor: [18,18]
+});
+
+var superNode = L.icon({
+	iconUrl: 'images/mapMarkers/super.png',
+	iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]
+});
+var pulseSuper = L.icon({
+	iconUrl: 'images/mapMarkers/super.png',
+	iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9],
+	shadowUrl: 'images/mapMarkers/pulse.svg',
+	shadowAnchor: [18,18]
+});
+//You Are Here
+var userLocationIcon = L.icon({
+        iconUrl: 'images/you_are_here.png',
+//        iconSize: [128, 38],
+        iconSize: [96, 28],
+	iconAnchor: [9, 9],
+//	shadowAnchor: [18,18]
+//	iconAnchor: [77, 256]
+//	iconAnchor: [180, -30]
+});
+
+//if(window.matchMedia(darkModeText).matches) {
+//	pulseNon['options']['shadowUrl'] = 'images/mapMarkers/pulse-invert.svg';
+//}
+
+//Layer Groups
+var nineHundredMHzStations = new L.LayerGroup();
+var nineLinksTX = new L.LayerGroup();
+var nineLinksThp = new L.LayerGroup();
+var nineLinksSnR = new L.LayerGroup();
+var nineLinksCost = new L.LayerGroup();
+var nineLinksQual = new L.LayerGroup();
+var band900 = L.layerGroup([nineHundredMHzStations, nineLinksTX]);
+
+var twoGHzStations = new L.LayerGroup();
+var twoLinksTX = new L.LayerGroup();
+var twoLinksThp = new L.LayerGroup();
+var twoLinksSnR = new L.LayerGroup();
+var twoLinksCost = new L.LayerGroup();
+var twoLinksQual = new L.LayerGroup();
+var band2 = L.layerGroup([twoGHzStations, twoLinksTX]);
+
+var threeGHzStations = new L.LayerGroup();
+var threeLinksTX = new L.LayerGroup();
+var threeLinksThp = new L.LayerGroup();
+var threeLinksSnR = new L.LayerGroup();
+var threeLinksCost = new L.LayerGroup();
+var threeLinksQual = new L.LayerGroup();
+var band3 = L.layerGroup([threeGHzStations, threeLinksTX]);
+
+var fiveGHzStations = new L.LayerGroup();
+var fiveLinksTX = new L.LayerGroup();
+var fiveLinksThp = new L.LayerGroup();
+var fiveLinksSnR = new L.LayerGroup();
+var fiveLinksCost = new L.LayerGroup();
+var fiveLinksQual = new L.LayerGroup();
+var band5 = L.layerGroup([fiveGHzStations, fiveLinksTX]);
+
+var noRFStations = new L.LayerGroup();
+var noRFLinks = new L.LayerGroup();
+var noRF = L.layerGroup([noRFStations,noRFLinks]);
+
+var superNodeStations = new L.LayerGroup();
+var superNodeLinks = new L.LayerGroup();
+var superNodes = new L.layerGroup([superNodeStations, superNodeLinks]);
+
+//var RFLinksTxRate = new L.layerGroup([twoLinksTX, threeLinksTX, fiveLinksTX, nineLinksTX]);
+var RFLinksTxRate = new L.layerGroup([]);
+var RFLinksExpected = new L.layerGroup([]);
+var RFLinksSnR = new L.layerGroup([]);
+var RFLinksCost = new L.layerGroup([]);
+var RFLinksQual = new L.layerGroup([]);
+
+var allStations = L.layerGroup([
+	nineHundredMHzStations,
+	twoGHzStations,
+	threeGHzStations,
+	fiveGHzStations,
+//	noRFStations
+]);
+
+var groupedOverlays = {
+	"Stations": {
+		"<img src='images/mapMarkers/purpleRadioCircle-icon.png' height='20'>2.4GHz": band2,
+		"<img src='images/mapMarkers/blueRadioCircle-icon.png' height='20'>3.4GHz": band3,
+		"<img src='images/mapMarkers/goldRadioCircle-icon.png' height='20'>5.8GHz": band5,
+		"<img src='images/mapMarkers/magentaRadioCircle-icon.png' height='20'>900MHz": band900,
+		"<img src='images/mapMarkers/greyRadioCircle-icon.png' height='20'>No RF": noRF,
+		"<img src='images/mapMarkers/super.png' height='20'>SuperNode": superNodes,
+	},
+	"RF Links": {
+		"<img src='images/txRateIcon2.png' height='20' title='Negotiated TX Rate'> TX Rate": RFLinksTxRate,
+		"<img src='images/expThruPut2.png' height='20' title='Expected Throughput'> Throughput": RFLinksExpected,
+		"<img src='images/waves2.png' height='20' title='SnR'> SnR": RFLinksSnR,
+		"<img src='images/quality.svg' height='20' title='Link Quality'> Link Quality": RFLinksQual,
+		"<img src='images/cost.svg' height='20' title='Link Cost'> Link Cost": RFLinksCost,
+	}
+};
+
+var defaultMap = "";
+var defaultMapName = "";
+var baseLayers = {};
+var mapNum = "map0";
+var numMaps = 0;
+
+for(var [k, v] of Object.entries(mapInfo['mapTileServers'])) {
+
+//if there is a map tile server entry that has ".local.mesh" in it's URL, AND,
+//the URL of the server of this page has ".local.mesh" in it, then use the mesh tile server.
+//if not, just use the other map tile server entries. 
+
+	if(v.includes(".local.mesh") && window.location.hostname.includes(".local.mesh")) {
+		defaultMap = new L.tileLayer(v, { className: 'map-tiles' });
+		if(k.includes("-default")) {
+			defaultMapName = k.replace("-default", "");
+		}else {
+			defaultMapName = k;
+		}
+		baseLayers[defaultMapName] = defaultMap;
+	}else {
+		if(k.includes("-default")) {
+			defaultMap = new L.tileLayer(v, { className: 'map-tiles' });
+			defaultMapName = k.replace("-default", "");
+			baseLayers[defaultMapName] = defaultMap;
+		}else {
+			var mapNum= new L.tileLayer(v, { className: 'map-tiles' });
+			baseLayers[k] = mapNum;
+		}
+	}
+	numMaps++;
+	mapNum = "map" + numMaps;
+}
+//console.log(baseLayers);
+
+
+
+var map = L.map('map', {
+	center: mapInfo['mapCenterCoords'],
+	zoom: mapInfo['mapInitialZoom'],
+	minZoom: 0,
+	maxZoom: 18,
+	layers: [defaultMap, band2, band3, band5, band900, noRF, superNodes, RFLinksTxRate]
+});
+
+
+//map hash (refresh at the same center co-ords you were on)
+var hash = new L.Hash(map);
+
+//Legend
+legend.addTo(map);
+legendHidden.addTo(map);
+
+/*
+if(window.matchMedia(darkModeText).matches) {
+	document.getElementById("legendMapOrigin").firstChild.src = "images/mapMarkers/pulse-invert.svg";
+	document.getElementById("darkModeCheckBox").checked = true;
+}
+*/
+
+
+//Create additional Control placeholders
+function addControlPlaceholders(map) {
+	var corners = map._controlCorners,
+	l = 'leaflet-',
+	container = map._controlContainer;
+
+	function createCorner(vSide, hSide) {
+		var className = l + vSide + ' ' + l + hSide;
+		corners[vSide + hSide] = L.DomUtil.create('div', className, container);
+	}
+
+	createCorner('verticalcenter', 'left');
+	createCorner('verticalcenter', 'right');
+}
+addControlPlaceholders(map);
+
+//Add the controls
+map.zoomControl.setPosition('verticalcenterleft');
+
+//the search button
+L.control.search({
+	layer: allStations,
+	initial: false,
+	zoom: 16,
+	position: 'verticalcenterleft',
+	hideMarkerOnCollapse: true
+}).addTo(map);
+
+//the ruler
+var rulerOptions = {
+		position: 'verticalcenterleft',
+		lengthUnit: {
+			factor: 0.621371,
+			display: 'Miles',
+			decimal: 3
+		}
+	};
+L.control.ruler(rulerOptions).addTo(map);
+document.getElementById('ruler').title = 'Ruler\n(ESC 1x to stop, 2x to remove)';
+
+//view as list (node_report.php)
+L.Control.viewAsList = L.Control.extend({
+	options: {
+		position: 'verticalcenterleft'
+	},
+	onAdd: function(map) {
+		var viewAsListControl = L.DomUtil.create('div', 'leaflet-control-custom leaflet-bar');
+		viewAsListControl.style.backgroundColor = 'white';
+		viewAsListControl.style.width = '30px';
+		viewAsListControl.style.height = '30px';
+		viewAsListControl.title = 'View as list (node report)';
+		var link = L.DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', viewAsListControl);
+		var listIcon = L.DomUtil.create('div', 'viewAsListControl', link);
+		listIcon.style.fontSize = '20px';
+		listIcon.style.verticalAlign = 'middle';
+
+		viewAsListControl.onclick = function() {
+			window.location = "node_report/node_report.html"
+		}
+		return viewAsListControl;
+	}
+});
+L.control.viewAsList = function(opts) {
+	return new L.Control.viewAsList(opts);
+}
+L.control.viewAsList().addTo(map);
+
+//Slide Menu
+//L.control.slideMenu(contents, {width: '400px', position: 'verticalcenterleft'}).addTo(map);
+
+//Grouped Layer Control
+var layerControls = L.control.groupedLayers(baseLayers, groupedOverlays, {exclusiveGroups: ["RF Links"], position: 'verticalcenterleft'}).addTo(map);
+//layerControls.addTo(map);
+L.DomEvent.disableClickPropagation(layerControls._container);
+L.DomEvent.disableScrollPropagation(layerControls._container);
+
+//map scale
+L.control.scale().addTo(map)
+
+//SPIDERFY
+var oms = new Spiderfy(map);
+oms.disable();
+map.on('zoomend', function(e) {
+	currZoom = e.target._zoom;
+	if(currZoom >= 0) {
+		oms.enable();
+		document.getElementById('spiderfyActive').style.visibility = 'visible';
+		oms.addListener('activate', function(markers) {
+			for(var i = 0; i < markers.length; i++) {
+				markers[i].closePopup();
+			}
+		});
+	}
+    if(currZoom <= 12) {
+		oms.disable();
+		document.getElementById('spiderfyActive').style.visibility = 'hidden';
+		oms.removeListener('activate', function(markers) {
+			for(var i = 0; i < markers.length; i++) {
+				markers[i].closePopup();
+			}
+		});
+	}
+});
+
+var localTime = new Date(pollingInfo['lastPollingRun'] + " UTC");
+var localTime = localTime.toLocaleString();
+MeshMapDetails = '\n' + pollingInfo['nodeTotal'] + ' Total nodes were polled @ ' + pollingInfo['numParallelThreads'] + 'x speed.<br>' +
+	pollingInfo['noLocation'] + ' devices had no location info.<br>' +
+	pollingInfo['garbageReturned'] + ' devices returned unusable (or no) data.<br>' +
+//	pollingInfo['mappableNodes'] + ' nodes can be shown, with ' + pollingInfo['mappableLinks'] + ' links.<br>' +
+	mapInfo['totalNodesInDB'] + ' nodes are shown, with ' + pollingInfo['mappableLinks'] + ' links.<br>' +
+	mapInfo['weekPlusOld'] + ' never polled or not seen in 1 week or more.<br>' +
+	'Last polling run took: ' + pollingInfo['pollingTimeSec'] + ' sec (' + (pollingInfo['pollingTimeSec'] / 60).toFixed(2) + ' min)<br>' +
+	'Data Last Acquired @ ' + localTime + '<br>';
+MeshMapDetails += '<a href="mailto:' + mapInfo['mapContact'] + '" title="KG6WXC MeshMap\nMap originally created by:\nKG6WXC in Oct 2016\nSpecial Thanks to:\nN7QJK (SK)">' + mapInfo['attribution'] + '</a> using ';
+MeshMapDetails += '<a href=http://leafletjs.com title="Map data &copy; by OpenStreetMap (http://openstreetmap.org) with contributions from:\nCC-BY-SA (http://creativecommons.org/licenses/by-sa/2.0/">Leaflet</a><br>';
+attributionCtrl = map.attributionControl;
+attributionCtrl.setPrefix('');
+attributionCtrl.addAttribution(MeshMapDetails);
+
+createDeviceMarkers(allDevices);
+
+//change link lines based on different metrics
+//i am sure there is a much better way to do this
+map.on('overlayadd', function(e) {
+	if(e.name.includes("TX Rate")) {
+		band900.removeLayer(nineLinksSnR);
+		band2.removeLayer(twoLinksSnR);
+		band3.removeLayer(threeLinksSnR);
+		band5.removeLayer(fiveLinksSnR);
+
+		band900.removeLayer(nineLinksThp);
+		band2.removeLayer(twoLinksThp);
+		band3.removeLayer(threeLinksThp);
+		band5.removeLayer(fiveLinksThp);
+
+                band900.removeLayer(nineLinksCost);
+                band2.removeLayer(twoLinksCost);
+                band3.removeLayer(threeLinksCost);
+                band5.removeLayer(fiveLinksCost);
+
+                band900.removeLayer(nineLinksQual);
+                band2.removeLayer(twoLinksQual);
+                band3.removeLayer(threeLinksQual);
+                band5.removeLayer(fiveLinksQual);
+
+		band900.addLayer(nineLinksTX);
+		band2.addLayer(twoLinksTX);
+		band3.addLayer(threeLinksTX);
+		band5.addLayer(fiveLinksTX);
+		document.getElementById("legendGradientRectangle").innerHTML = "10&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TX Rate (Mbps)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;100+";
+	}
+	if(e.name.includes("Throughput")) {
+		band900.removeLayer(nineLinksSnR);
+		band2.removeLayer(twoLinksSnR);
+		band3.removeLayer(threeLinksSnR);
+		band5.removeLayer(fiveLinksSnR);
+
+		band900.removeLayer(nineLinksTX);
+		band2.removeLayer(twoLinksTX);
+		band3.removeLayer(threeLinksTX);
+		band5.removeLayer(fiveLinksTX);
+
+                band900.removeLayer(nineLinksCost);
+                band2.removeLayer(twoLinksCost);
+                band3.removeLayer(threeLinksCost);
+                band5.removeLayer(fiveLinksCost);
+
+                band900.removeLayer(nineLinksQual);
+                band2.removeLayer(twoLinksQual);
+                band3.removeLayer(threeLinksQual);
+                band5.removeLayer(fiveLinksQual);
+
+		band900.addLayer(nineLinksThp);
+		band2.addLayer(twoLinksThp);
+		band3.addLayer(threeLinksThp);
+		band5.addLayer(fiveLinksThp);
+		document.getElementById("legendGradientRectangle").innerHTML = "10&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Exp TPut (MBps)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;60+";
+	}
+	if(e.name.includes("SnR")) {
+		band900.removeLayer(nineLinksTX);
+		band2.removeLayer(twoLinksTX);
+		band3.removeLayer(threeLinksTX);
+		band5.removeLayer(fiveLinksTX);
+
+		band900.removeLayer(nineLinksThp);
+		band2.removeLayer(twoLinksThp);
+		band3.removeLayer(threeLinksThp);
+		band5.removeLayer(fiveLinksThp);
+
+                band900.removeLayer(nineLinksCost);
+                band2.removeLayer(twoLinksCost);
+                band3.removeLayer(threeLinksCost);
+                band5.removeLayer(fiveLinksCost);
+
+                band900.removeLayer(nineLinksQual);
+                band2.removeLayer(twoLinksQual);
+                band3.removeLayer(threeLinksQual);
+                band5.removeLayer(fiveLinksQual);
+
+		band900.addLayer(nineLinksSnR);
+		band2.addLayer(twoLinksSnR);
+		band3.addLayer(threeLinksSnR);
+		band5.addLayer(fiveLinksSnR);
+		document.getElementById("legendGradientRectangle").innerHTML = "10&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SnR (db)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;40+";
+	}
+	if(e.name.includes("cost")) {
+                band900.removeLayer(nineLinksTX);
+                band2.removeLayer(twoLinksTX);
+                band3.removeLayer(threeLinksTX);
+                band5.removeLayer(fiveLinksTX);
+
+                band900.removeLayer(nineLinksThp);
+                band2.removeLayer(twoLinksThp);
+                band3.removeLayer(threeLinksThp);
+                band5.removeLayer(fiveLinksThp);
+
+                band900.removeLayer(nineLinksSnR);
+                band2.removeLayer(twoLinksSnR);
+                band3.removeLayer(threeLinksSnR);
+                band5.removeLayer(fiveLinksSnR);
+
+                band900.removeLayer(nineLinksQual);
+                band2.removeLayer(twoLinksQual);
+                band3.removeLayer(threeLinksQual);
+                band5.removeLayer(fiveLinksQual);
+
+		band900.addLayer(nineLinksCost);
+		band2.addLayer(twoLinksCost);
+		band3.addLayer(threeLinksCost);
+		band5.addLayer(fiveLinksCost);
+		document.getElementById("legendGradientRectangle").innerHTML = "2+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Link Cost&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<=1";
+	}
+	if(e.name.includes("qual")) {
+                band900.removeLayer(nineLinksTX);
+                band2.removeLayer(twoLinksTX);
+                band3.removeLayer(threeLinksTX);
+                band5.removeLayer(fiveLinksTX);
+
+                band900.removeLayer(nineLinksThp);
+                band2.removeLayer(twoLinksThp);
+                band3.removeLayer(threeLinksThp);
+                band5.removeLayer(fiveLinksThp);
+
+                band900.removeLayer(nineLinksSnR);
+                band2.removeLayer(twoLinksSnR);
+                band3.removeLayer(threeLinksSnR);
+                band5.removeLayer(fiveLinksSnR);
+
+                band900.removeLayer(nineLinksCost);
+                band2.removeLayer(twoLinksCost);
+                band3.removeLayer(threeLinksCost);
+                band5.removeLayer(fiveLinksCost);
+
+		band900.addLayer(nineLinksQual);
+		band2.addLayer(twoLinksQual);
+		band3.addLayer(threeLinksQual);
+		band5.addLayer(fiveLinksQual);
+		document.getElementById("legendGradientRectangle").innerHTML = "<0.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Link Quality&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1";
+	}
+});
+function themeString({ localStorageTheme, systemSettingDark }) {
+	if(localStorageTheme !== null) {
+		return localStorageTheme;
+	}
+	if(systemSettingDark.matches) {
+		return "dark";
+	}
+	return "light";
+}
+var localStorageTheme = localStorage.getItem("theme");
+var systemSettingDark = window.matchMedia(darkModeText);
+var currentThemeSetting = themeString({ localStorageTheme, systemSettingDark });
+
+if(currentThemeSetting == "dark") {
+        localStorage.setItem("theme", currentThemeSetting);
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+        document.getElementById("legendMapOrigin").firstChild.src = "images/mapMarkers/pulse-invert.svg";
+        document.getElementsByClassName("leaflet-marker-shadow")[0]['src'] = "images/mapMarkers/pulse-invert.svg";
+        document.getElementById("darkModeCheckBox").checked = true;
+}else {
+        localStorage.setItem("theme", currentThemeSetting);
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+        document.getElementById("legendMapOrigin").firstChild.src = "images/mapMarkers/pulse.svg";
+        document.getElementsByClassName("leaflet-marker-shadow")[0]['src'] = "images/mapMarkers/pulse.svg";
+        document.getElementById("darkModeCheckBox").checked = false;
+
+}
+
+var darkModeCheckBox = document.querySelector("input[data-theme-toggle]");
+darkModeCheckBox.addEventListener("change", function() {
+	if(darkModeCheckBox.checked) {
+		console.log("checked");
+		var newTheme = "dark";
+		localStorage.setItem("theme", newTheme);
+		document.querySelector("html").setAttribute("data-theme", newTheme);
+		document.getElementById("legendMapOrigin").firstChild.src = "images/mapMarkers/pulse-invert.svg";
+		document.getElementsByClassName("leaflet-marker-shadow")[0]['src'] = "images/mapMarkers/pulse-invert.svg";
+	}else {
+		console.log("not checked");
+		var newTheme = "light";
+		localStorage.setItem("theme", newTheme);
+		document.querySelector("html").setAttribute("data-theme", newTheme);
+		document.getElementById("legendMapOrigin").firstChild.src = "images/mapMarkers/pulse.svg";
+		document.getElementsByClassName("leaflet-marker-shadow")[0]['src'] = "images/mapMarkers/pulse.svg";
+	}
+});
+</script>
+</body>
+</html>
